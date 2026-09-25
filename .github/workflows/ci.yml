@@ -83,11 +83,11 @@ jobs:
           cache: npm
           cache-dependency-path: front/package-lock.json
 
-      - name: Install frontend dependencies
+      - name: Install Front-End dependencies
         working-directory: front
         run: npm ci
 
-      - name: Build frontend (Angular)
+      - name: Build Front-End (Angulat)
         working-directory: front
         run: npm run build
 
@@ -99,7 +99,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
 
-      - name: Build backend (Gradle)
+      - name: Build Back-End (Gradle)
         working-directory: back
         run: ./gradlew build
 
@@ -117,6 +117,6 @@ jobs:
           fetch-depth: 0
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4.1.0
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
