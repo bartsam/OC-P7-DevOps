@@ -118,6 +118,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Compile Back-End classes for SonarQube
+        working-directory: back
+        run: ./gradlew classes
+
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v8
         env:
