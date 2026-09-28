@@ -65,6 +65,16 @@ jobs:
           path: test-results/**/*.xml
           if-no-files-found: warn
 
+      - name: Upload coverage reports for SonarQube
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-reports
+          path: |
+            front/coverage/microcrm/lcov.info
+            back/build/reports/jacoco/test/jacocoTestReport.xml
+          if-no-files-found: error
+
   build:
     name: Build Front-End & Back-End
     runs-on: ubuntu-latest
@@ -124,6 +134,12 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
           cache: gradle
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v7
+        with:
+          name: coverage-reports
+          path: .
 
       - name: Compile Back-End classes for SonarQube
         working-directory: back

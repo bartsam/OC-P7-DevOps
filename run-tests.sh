@@ -42,8 +42,8 @@ run_frontend_tests() {
   # Remove any leftover report directory from a previous test run.
   rm -rf "$reports_dir"
 
-  # Run unit tests in a headless browser.
-  if ! (cd "$FRONT_DIR" && npm run test:junit); then
+  # Run unit tests in a headless browser and generate the LCOV coverage report.
+  if ! (cd "$FRONT_DIR" && npm run test:coverage); then
     TEST_STATUS=1
   fi
 
