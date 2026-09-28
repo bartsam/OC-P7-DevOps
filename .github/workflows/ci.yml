@@ -11,6 +11,8 @@ on:
 env:
   NODE_VERSION: "20"
   JAVA_VERSION: "17"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   tests:
@@ -126,3 +128,51 @@ jobs:
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker:
+    name: Build and publish Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build, tests, sonar]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Front-End image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: front
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/microcrm-front:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/microcrm-front:${{ github.sha }}
+          cache-from: type=gha,scope=front
+          cache-to: type=gha,mode=max,scope=front
+
+      - name: Build and push Back-End image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: back
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/microcrm-back:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/microcrm-back:${{ github.sha }}
+          cache-from: type=gha,scope=back
+          cache-to: type=gha,mode=max,scope=back
