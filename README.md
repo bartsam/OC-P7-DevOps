@@ -119,10 +119,10 @@ docker build --target front -t orion-microcrm-front:latest .
 ##### Exécuter l'image
 
 ```shell
-docker run -it --rm -p 80:80 -p 443:443 orion-microcrm-front:latest
+docker run -it --rm -p 80:80 orion-microcrm-front:latest
 ```
 
-L'application sera disponible sur https://localhost.
+L'application sera disponible sur http://localhost.
 
 #### Serveur
 
@@ -140,16 +140,25 @@ docker run -it --rm -p 8080:8080 orion-microcrm-back:latest
 
 L'API sera disponible sur http://localhost:8080.
 
-#### Tout en un
+#### Orchestration locale
+
+Le fichier `docker-compose.yml` construit et démarre séparément le frontend et
+le backend :
 
 ```shell
-docker build --target standalone -t orion-microcrm-standalone:latest .
+docker compose up --build
 ```
 
-##### Exécuter l'image
+L'application est disponible sur http://localhost et l'API sur
+http://localhost:8080. Arrêtez les services avec `docker compose down`.
 
-```shell
-docker run -it --rm -p 8080:8080 -p 80:80 -p 443:443 orion-microcrm-standalone:latest
-```
+Les images suivent ces choix :
 
-L'application sera disponible sur https://localhost et l'API sur http://localhost:8080.
+- builds multi-stage afin de ne conserver ni Node.js ni Gradle dans les images
+  d'exécution ;
+- images officielles et légères (`node:20-alpine`, `caddy:2-alpine` et
+  `eclipse-temurin:17-jre`) ;
+- backend exécuté avec un utilisateur non-root ;
+- healthchecks et démarrage du frontend après la disponibilité du backend ;
+- HTTP uniquement, car cette orchestration est destinée au développement local
+  et ne possède ni nom de domaine ni certificat TLS public.
