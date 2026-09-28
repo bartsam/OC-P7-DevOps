@@ -1,5 +1,55 @@
+# ================================
+# Gradle build files and cache
+# ================================
 /back/.gradle
 /back/build
+
+# ================================
+# Node and build output
+# ================================
 /front/dist
 /front/node_modules
 /front/.angular
+/front/out-tsc
+/front/.cache
+/front/.tmp
+
+# ================================
+# Testing & Coverage
+# ================================
+/front/coverage
+/front/reports
+/test-results
+run-tests.sh
+
+# ================================
+# Environment & log files
+# ================================
+.env
+.env.*
+!.env.example
+
+# ================================
+# IDE, OS and log files
+# ================================
+.vscode
+.idea
+.DS_Store
+*.iml
+*.log
+README.md
+
+# ================================
+# Version control & CI files
+# ================================
+.github
+.git
+.gitignore
+
+# ================================
+# Docker & local orchestration
+# ================================
+Dockerfile
+.dockerignore
+docker-compose.yml
+sonar-project.properties
