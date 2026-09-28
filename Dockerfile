@@ -19,8 +19,8 @@ WORKDIR /src
 # Copy package-related files to leverage Docker's caching mechanism
 COPY front/package.json front/package-lock.json ./
 
-# Install project dependencies 
-RUN --mount=type=cache,target=/root/.npm npm ci
+# Install project dependencies securely by ignoring lifecycle scripts
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
 
 # Copy the application source code into the container
 COPY front/ ./
