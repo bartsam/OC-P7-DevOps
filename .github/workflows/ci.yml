@@ -115,6 +115,9 @@ jobs:
         working-directory: back
         run: ./gradlew build
 
+      - name: Validate Docker Compose configuration
+        run: docker compose config -q
+
   sonar:
     name: SonarQube analysis
     runs-on: ubuntu-latest

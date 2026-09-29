@@ -51,6 +51,9 @@ RUN ./gradlew build
 # Use a lightweight Caddy image for runtime
 FROM caddy:${CADDY_VERSION} AS front
 
+# Use HTTP locally unless a deployment supplies a public domain.
+ENV CADDY_SITE_ADDRESS=:80
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -60,8 +63,9 @@ COPY --from=front-build /src/dist/microcrm/browser /app/front
 # Copy custom Caddy config
 COPY misc/docker/Caddyfile /app/Caddyfile
 
-# Serve the frontend over HTTP for local orchestration.
+# Document the HTTP and HTTPS ports served by Caddy.
 EXPOSE 80
+EXPOSE 443
 
 # Start Caddy directly with custom config
 CMD ["caddy", "run", "--config", "/app/Caddyfile", "--adapter", "caddyfile"]
