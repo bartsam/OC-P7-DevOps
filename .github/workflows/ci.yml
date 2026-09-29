@@ -144,9 +144,13 @@ jobs:
           name: coverage-reports
           path: .
 
-      - name: Compile Back-End classes for SonarQube
+      - name: Prepare Java classes and libraries for SonarQube
         working-directory: back
-        run: ./gradlew classes
+        run: |
+          ./gradlew testClasses
+          mkdir -p build/sonar-libs
+          gradle_cache_dir="${GRADLE_USER_HOME:-$HOME/.gradle}/caches/modules-2/files-2.1"
+          find "$gradle_cache_dir" -type f -name '*.jar' -exec cp -n {} build/sonar-libs/ \;
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v8
