@@ -1,6 +1,12 @@
-:80 {
-	root * /app/front
-	encode gzip
-	try_files {path} /index.html
-	file_server
+{$CADDY_SITE_ADDRESS} {
+	handle_path /api/* {
+		reverse_proxy back:8080
+	}
+
+	handle {
+		root * /app/front
+		encode gzip
+		try_files {path} /index.html
+		file_server
+	}
 }
