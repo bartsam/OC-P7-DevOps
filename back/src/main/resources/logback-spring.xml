@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Spring Boot logging defaults. -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <!-- Standard console appender. -->
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProfile name="elk">
+        <!-- Docker Logstash host. -->
+        <springProperty scope="context"
+                        name="logstashHost"
+                        source="logstash.host"
+                        defaultValue="logstash"/>
+
+        <!-- Send JSON logs to Logstash. -->
+        <appender name="LOGSTASH"
+                  class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+            <!-- Docker service name and TCP port. -->
+            <destination>${logstashHost}:5044</destination>
+            <!-- Standard structured log fields. -->
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        </appender>
+
+        <!-- Write application logs to console and Logstash. -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LOGSTASH"/>
+        </root>
+
+        <!-- Add HTTP events for volume and frequency charts. -->
+        <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/>
+    </springProfile>
+
+    <springProfile name="!elk">
+        <!-- Console-only logging without ELK. -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Reduce framework noise. -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+</configuration>

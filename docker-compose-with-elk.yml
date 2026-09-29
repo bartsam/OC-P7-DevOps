@@ -1,0 +1,94 @@
+# Application MicroCRM with local ELK monitoring.
+# Démarrage : docker compose -f docker-compose-with-elk.yml up -d --build
+# Front : http://localhost | Back : http://localhost:8080
+# Kibana : http://localhost:5601 | Elasticsearch : http://localhost:9200
+
+services:
+  back:
+    build:
+      context: .
+      target: back
+    image: microcrm-back:local
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: elk
+      LOGSTASH_HOST: logstash
+    depends_on:
+      logstash:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  front:
+    build:
+      context: .
+      target: front
+    image: microcrm-front:local
+    environment:
+      CADDY_SITE_ADDRESS: ${CADDY_SITE_ADDRESS:-:80}
+    depends_on:
+      back:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"
+    healthcheck:
+      test: ["CMD-SHELL", "bin/logstash -t || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+  esdata:
