@@ -1,4 +1,14 @@
 {$CADDY_SITE_ADDRESS} {
+	log {
+		output net logstash:5044 {
+			soft_start
+		}
+		format json {
+			time_format rfc3339
+			duration_format ms
+		}
+	}
+
 	handle_path /api/* {
 		reverse_proxy back:8080
 	}
