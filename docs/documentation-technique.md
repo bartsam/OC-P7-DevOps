@@ -363,13 +363,13 @@ La mise en place locale d’ELK repose sur le fichier docker-compose-with-elk.ym
 
 ### 7.3 Procédure de restauration
 
-| Scénario                                    | Risque                                                                       | Action de restauration                                                                                                                                                 |
-| ------------------------------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Version défectueuse publiée sur `main`      | Pic de logs `ERROR` dans Kibana (`microcrm-logs-*`), healthcheck `unhealthy` | Grâce au build reproductible et aux images taguées par SHA de la CI, la restauration est simplifiée : retour au commit stable, contrôle des logs et correction via PR. |
-| Version publiée sur `main` sans release tag | Aucun artefact JAR/ZIP archivé, version non traçable avec SHA                | Poser le tag sur le commit validé pour déclencher `release.yml`                                                                                                        |
-| Release `vX.Y.Z` défectueuse                | Bug constaté, artefacts JAR ou ZIP inutilisable au démarrage                 | Réutiliser la release précédente, puis publier un correctif en `vX.Y.(Z+1)`                                                                                            |
-| Pipeline en échec avant publication         | Job `tests`, `build`, `sonar` ou `docker` en échec                           | Corriger sur la branche ou annuler la PR ; `main` n'est pas impacté grâce au Quality Gate.                                                                             |
-| Secret compromis ou expiré                  | Échec du scan Sonar ou refus de publication GHCR.                            | Révoquer puis générer le token, mettre à jour dans GitHub Secrets, relancer workflow                                                                                   |
+| Scénario                                    | Risque                                                                                  | Action de restauration                                                                                                               |
+| ------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Version défectueuse publiée sur `main`      | Régression publiée dans GHCR entraînant pics de logs `ERROR` et healthcheck `unhealthy` | Revert le commit par une PR ; après sa fusion dans main, la CI construit et publie la version restaurée sous le SHA du commit revert |
+| Version publiée sur `main` sans release tag | Aucun artefact JAR/ZIP archivé, version non traçable avec SHA                           | Poser le tag sur le commit validé pour déclencher `release.yml`                                                                      |
+| Release `vX.Y.Z` défectueuse                | Bug constaté, artefacts JAR ou ZIP inutilisable au démarrage                            | Réutiliser la release précédente, puis publier un correctif en `vX.Y.(Z+1)`                                                          |
+| Pipeline en échec avant publication         | Job `tests`, `build`, `sonar` ou `docker` en échec                                      | Corriger sur la branche ou annuler la PR ; `main` n'est pas impacté grâce au Quality Gate.                                           |
+| Secret compromis ou expiré                  | Échec du scan Sonar ou refus de publication GHCR.                                       | Révoquer puis générer le token, mettre à jour dans GitHub Secrets, relancer workflow                                                 |
 
 ## 8. Plan de mise à jour
 
