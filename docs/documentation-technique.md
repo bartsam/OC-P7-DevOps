@@ -60,7 +60,7 @@ La [release GitHub](screenshots/github-release.png) v0.1.0 illustre ce résultat
 
 #### Choix des actions GitHub
 
-Les actions GitHub, Docker et SonarSource retenues sont officielles ou maintenues par leurs éditeurs. Elles limitent la dette de maintenance et facilitent le suivi des mises à jour. L'action communautaire `mikepenz/action-junit-report` complète ce socle en rendant les résultats de tests lisibles dans GitHub. Les caches npm, Gradle et GitHub Actions réduisent la durée des installations et des builds ; ils contribuent ainsi à réduire la part CI du Lead Time. La release automatisée assure la traçabilité des livrables binaires par leur tag SemVer.
+Les actions GitHub, Docker et SonarSource retenues sont officielles et maintenues par leurs éditeurs. Elles facilitent la maintenance et le suivi des mises à jour.
 
 | Action                                                                           | Rôle                                                                                                                                                                                             | Job(s) utilisant l'action                                                   |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
@@ -72,7 +72,6 @@ Les actions GitHub, Docker et SonarSource retenues sont officielles ou maintenue
 | `mikepenz/action-junit-report`                                                   | Affiche les résultats JUnit dans les checks GitHub. Les fichiers bruts restent téléchargeables comme artefact.                                                                                   | `tests`                                                                     |
 | `docker/login-action`, `docker/setup-buildx-action`, `docker/build-push-action`  | S'authentifient auprès de GHCR avec le token GitHub, construisent les cibles `front` et `back` du Dockerfile et exploitent Buildx et le cache GitHub Actions pour accélérer les builds d'images. | `docker`                                                                    |
 | `SonarSource/sonarqube-scan-action`, `SonarSource/sonarqube-quality-gate-action` | Importent les résultats de qualité et bloquent la publication si le Quality Gate échoue.                                                                                                         | `sonar`                                                                     |
-| `gh release create`                                                              | Crée une GitHub Release et y joint le JAR et l'archive Angular produits depuis le commit tagué, pour tracer les livrables par leur version SemVer.                                               | `release`                                                                   |
 
 ### 2.2 Scripts d'automatisation
 
@@ -184,15 +183,15 @@ La chaîne CI/CD vérifie automatiquement que l'application peut être testée, 
 
 Le plan couvre les tests automatisés existants, les contrôles de construction et l'analyse statique SonarQube. Il ne couvre pas les tests fonctionnels de bout en bout, les tests de charge ni les audits de dépendances ; ces contrôles constituent des améliorations ultérieures.
 
-| Type                        | Objectif                                                                                                     | Exécution                                          | Critère de réussite                                                         |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------- |
-| Tests front Jasmine/Karma   | Vérifier les composants et services Angular couverts.                                                        | `npm run test:coverage` via `run-tests.sh`         | Tous les tests passent ; les rapports JUnit et LCOV sont générés.           |
-| Tests back JUnit            | Vérifier le contexte Spring Boot et l'accès aux données des repositories.                                    | `./gradlew clean test` via `run-tests.sh`          | Tous les tests passent ; les rapports JUnit et JaCoCo sont générés.         |
-| Qualité et sécurité du code | Détecter les bugs, vulnérabilités potentielles, duplications et problèmes de couverture sur le nouveau code. | Scan SonarQube avec les rapports LCOV et JaCoCo.   | Le scan se complète et le Quality Gate passe avec 80% de coverage.          |
-| Build applicatif\*          | Vérifier que les applications Angular et Spring Boot peuvent être compilées et packagées.                    | `npm run build` et `./gradlew build`               | Le bundle Angular et le JAR Spring Boot sont produits.                      |
-| Configuration Compose\*     | Vérifier la syntaxe et les variables de `docker-compose.yml`.                                                | `docker compose config -q`                         | La configuration est valide.                                                |
-| Images Docker\*             | Construire et publier les images exécutables validées.                                                       | `docker/build-push-action`                         | Les images sont publiées dans GHCR avec les tags `latest` et SHA du commit. |
-| Contrôle des dépendances\*  | Détecter les vulnérabilités connues dans les dépendances front, back et les images Docker.                   | _Axe d’amélioration non implémentée actuellement._ | Aucune vulnérabilité critique et un rapport d'audit généré.                 |
+| Type                         | Objectif                                                                                         | Exécution                                          | Critère de réussite                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Tests front Jasmine/Karma    | Vérifier le rendu de l’application ainsi que l’instanciation des composants et services Angular. | `npm run test:coverage` via `run-tests.sh`         | Tous les tests passent ; les rapports JUnit et LCOV sont générés.           |
+| Tests back JUnit             | Vérifier l’accès aux données et le bon fonctionnement des repositories.                          | `./gradlew clean test` via `run-tests.sh`          | Tous les tests passent ; les rapports JUnit et JaCoCo sont générés.         |
+| Qualité et sécurité du code  | Détecter les bugs, vulnérabilités, duplications et problèmes de couverture sur le nouveau code.  | Scan SonarQube avec les rapports LCOV et JaCoCo.   | Le scan se complète et le Quality Gate passe avec 80% de coverage.          |
+| Build applicatif\*           | Vérifier que les applications Angular et Spring Boot peuvent être compilées et packagées.        | `npm run build` et `./gradlew build`               | Le bundle Angular et le JAR Spring Boot sont produits.                      |
+| Configuration Compose\*      | Vérifier la syntaxe et les variables de `docker-compose.yml`.                                    | `docker compose config -q`                         | La configuration est valide.                                                |
+| Images Docker\*              | Vérifier que les images exécutables peuvent être construites puis publiées.                      | `docker/build-push-action`                         | Les images sont publiées dans GHCR avec les tags `latest` et SHA du commit. |
+| _Contrôle des dépendances\*_ | _Détecter les vulnérabilités connues dans les dépendances front, back et les images Docker._     | _Axe d’amélioration non implémentée actuellement._ | _Aucune vulnérabilité critique et un rapport d'audit généré._               |
 
 \* Contrôles complémentaires de la CI : ils confirment que les applications et leurs conteneurs peuvent être produits après les tests.
 
@@ -204,7 +203,7 @@ Le plan couvre les tests automatisés existants, les contrôles de construction 
 | **Push** vers `main`         | Tests front et back, build, validation Compose, SonarQube et Quality Gate + puis publication des images Docker dans GHCR.                  |
 | **Autres branches**          | Aucun workflow CI, tant que les déclencheurs ne sont pas étendus.                                                                          |
 | **Tag** `vX.Y.Z`             | Validation du tag, build du ZIP Angular et du JAR, et création d'une GitHub Release.                                                       |
-| Exécution planifiée          | _Non implémentée_ : axe d’amélioration à mettre en place pour détecter les vulnérabilités des dépendances et alimenter les métriques DORA. |
+| _Exécution planifiée_        | _Non implémentée : axe d’amélioration à mettre en place pour détecter les vulnérabilités des dépendances et alimenter les métriques DORA._ |
 
 ### 4.3 Objectifs des tests
 
@@ -235,16 +234,16 @@ L'analyse [SonarQube Cloud](screenshots/sonarqube-overview.png) distingue quatre
 - un **code smell / maintainability issue** : dette technique de maintenabilité ;
 - un **security hotspot** : code sensible demandant une revue humaine.
 
-| Indicateur        | Résultat              | Analyse                                                                                             |
-| ----------------- | --------------------- | --------------------------------------------------------------------------------------------------- |
-| Quality Gate      | **Passed**            | La publication est autorisée, sans effacer la dette historique.                                     |
-| Issues ouvertes   | **55**                | Liste de dette technique à réduire progressivement.                                                 |
-| Security          | **4** (Rating **C**)  | 3 Medium et 1 Low : risque de code potentiellement exploitable.                                     |
-| Security hotspots | **0** (Rating **A**)  | Aucun hotspot en attente de revue sur cette analyse.                                                |
-| Reliability       | **32** (Rating **C**) | 1 High, 30 Medium et 1 Low : risque de comportement défaillant.                                     |
-| Maintainability   | **21** (Rating **A**) | Dette à traiter progressivement ; la répartition par sévérité n’est pas reprise dans cette capture. |
-| Duplication       | **2,5 %**             | Taux limité, mais à surveiller sur les futures évolutions.                                          |
-| Couverture        | **37,4 %**            | Insuffisant pour sécuriser les régressions (viser 80 % de couverture)                               |
+| Indicateur        | Résultat              | Analyse                                                               |
+| ----------------- | --------------------- | --------------------------------------------------------------------- |
+| Quality Gate      | **Passed**            | La publication est autorisée, sans effacer la dette historique.       |
+| Issues ouvertes   | **55**                | Liste de dette technique à réduire progressivement.                   |
+| Security          | **4** (Rating **C**)  | 3 Medium et 1 Low : risque de code potentiellement exploitable.       |
+| Security hotspots | **0** (Rating **A**)  | Aucun hotspot en attente de revue sur cette analyse.                  |
+| Reliability       | **32** (Rating **C**) | 1 High, 30 Medium et 1 Low : risque de comportement défaillant.       |
+| Maintainability   | **21** (Rating **A**) | 1 High, 11 Medium et 9 Low : dette à traiter progressivement.         |
+| Duplication       | **2,5 %**             | Taux limité, mais à surveiller sur les futures évolutions.            |
+| Couverture        | **37,4 %**            | Insuffisant pour sécuriser les régressions (viser 80 % de couverture) |
 
 Le tableau suivant synthétise les principales alertes ouvertes regroupées par cause, à partir de la [liste des issues SonarQube](screenshots/sonarqube-issues.png) des fichiers et lignes concernés, afin de faciliter leur priorisation.
 
@@ -460,4 +459,4 @@ La qualité reste le principal axe de progression même si le Quality Gate Sonar
 5. Préparer l’évolution vers une base de données persistante avec volume dédié, sauvegardes automatisées et tests réguliers de restauration.
 6. Consolider les métriques DORA et les alertes ELK sur davantage de publications et ajouter une exécution planifiée des tests et des contrôles de sécurité afin d’ajuster les seuils, de mesurer le MTTR et de piloter l’amélioration continue.
 
-Cette base CI/CD répond ainsi aux besoins de fiabilité, de rapidité et de qualité exprimés pour MicroCRM, tout en donnant une trajectoire claire pour renforcer la sécurité, la couverture de tests et la maturité opérationnelle.
+Cette base CI/CD répond ainsi aux besoins de fiabilité, de rapidité et de qualité exprimés par MicroCRM, et constitue un socle fiable et évolutif pour la livraison de l'application.
