@@ -99,7 +99,7 @@ jobs:
         working-directory: front
         run: npm ci
 
-      - name: Build Front-End (Angulat)
+      - name: Build Front-End (Angular)
         working-directory: front
         run: npm run build
 
